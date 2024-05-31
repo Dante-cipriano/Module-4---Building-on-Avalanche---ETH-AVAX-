@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract CellphonesShoppe is ERC20, Ownable {
+
+    mapping(uint256 => uint256) public Cellphone;
+
+    constructor() ERC20("Cellphone", "Type") Ownable(msg.sender) {
+        Cellphone[1] = 1000; // Realme
+        Cellphone[2] = 2000; // Samsung
+        Cellphone[3] = 3000; // Iphone
+        Cellphone[4] = 4000; // Vivo
+        Cellphone[5] = 5000; // Redmi
+    }
+
+    function mint(address _to, uint256 _amount) public onlyOwner {
+        _mint(_to, _amount);
+    }
+
+    function C_transfer(address _to, uint256 _amount) public {
+        require(balanceOf(msg.sender) >= _amount, "Transfer Failed: Insufficient balance.");
+        approve(msg.sender, _amount);
+        transferFrom(msg.sender, _to, _amount);
+    }
+
+    function typesofCellphones() external pure returns (string memory) {
+        string memory saleOptions = " Cellphone: {1} Realme (1000) {2} Samsung (2000) {3} Iphone (3000) {4} Vivo (4000) {5} Redmi (5000)" ;
+        return saleOptions;
+    }
+
+    function redeem(uint256 _amount) public {
+        require( Cellphone[_amount] > 0, " Cellphone is not enough");
+        require(_amount <= 3, " Cellphone is not enough.");
+        require(balanceOf(msg.sender) >=  Cellphone[_amount], "Redeem Failed: Insufficient balance.");
+        transfer(owner(),  Cellphone[_amount]);
+    }
+    
+    function burn(uint256 _amount) public {
+        require(balanceOf(msg.sender) >= _amount, "Burn Failed: Insufficient balance.");
+        approve(msg.sender, _amount);
+        _burn(msg.sender, _amount);
+    }
+
+    function getBalance() external view returns (uint256) {
+        return this.balanceOf(msg.sender);
+    }
+
+    function decimals() override public pure returns (uint8) {
+        return 0;
+    }
+}
+
