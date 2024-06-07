@@ -1,4 +1,4 @@
-# MyToken Contract
+# MyCellphone Contract
 
 ## Overview
 MyToken is an ERC20 token contract with additional features such as minting, burning, redeeming items, and managing ownership.
