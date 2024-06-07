@@ -21,6 +21,7 @@ contract MyCellphone is IERC20, Ownable {
     }
 
     Item[] public items;
+    mapping(address => Item[]) public redeemedItems;
 
     constructor(string memory _name, address initialOwner) Ownable(initialOwner) {
         name = _name;
@@ -104,6 +105,9 @@ contract MyCellphone is IERC20, Ownable {
 
         // Mark the item as unavailable
         item.available = false;
+
+        // Add the redeemed item to the sender's redeemed items list
+        redeemedItems[msg.sender].push(item);
     }
 
     function burn(uint256 amount) public {
@@ -132,5 +136,9 @@ contract MyCellphone is IERC20, Ownable {
         }
 
         return availableItems;
+    }
+
+    function getRedeemedItems(address account) public view returns (Item[] memory) {
+        return redeemedItems[account];
     }
 }
