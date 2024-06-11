@@ -5,34 +5,33 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DotaPoints is IERC20, Ownable {
+contract MyCellphone is IERC20, Ownable {
     using SafeMath for uint256;
 
     string public name;
-    string public symbol = "DOTA"; // Symbol for DotaPoints
     uint256 private _totalSupply;
 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
-    mapping(address => mapping(uint256 => bool)) private _redeemed; // Keeps track of redeemed items
 
-    struct GameItem {
+    struct Item {
         string name;
-        uint256 price; // Price in DotaPoints
+        uint256 price;
         bool available;
     }
 
-    GameItem[] public dotaPoints;
+    Item[] public items;
+    mapping(address => Item[]) public redeemedItems;
 
     constructor(string memory _name, address initialOwner) Ownable(initialOwner) {
         name = _name;
         _balances[msg.sender] = _totalSupply;
         emit Transfer(address(0), msg.sender, _totalSupply);
 
-        // Adding initial DOTA Points items
-        dotaPoints.push(GameItem({ name: "Battle Pass", price: 1000, available: true }));
-        dotaPoints.push(GameItem({ name: "Battle Pass Premium", price: 2000, available: true }));
-        dotaPoints.push(GameItem({ name: "ChatWheel", price: 500, available: true }));
+        // Items
+        items.push(Item({ name: "Realme", price: 10000, available: true }));
+        items.push(Item({ name: "Vivo", price: 11000, available: true }));
+        items.push(Item({ name: "Iphone", price: 15000, available: true }));
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -92,11 +91,9 @@ contract DotaPoints is IERC20, Ownable {
         emit Transfer(address(0), account, amount);
     }
 
-    event ItemRedeemed(address indexed user, string itemName);
-
     function redeem(uint256 itemIndex) public {
-        require(itemIndex < dotaPoints.length, "Invalid item index");
-        GameItem storage item = dotaPoints[itemIndex];
+        require(itemIndex < items.length, "Invalid item index");
+        Item storage item = items[itemIndex];
         require(item.available, "Item is not available");
         require(_balances[msg.sender] >= item.price, "Insufficient balance to redeem item");
 
@@ -109,11 +106,8 @@ contract DotaPoints is IERC20, Ownable {
         // Mark the item as unavailable
         item.available = false;
 
-        // Mark the item as redeemed by the user
-        _redeemed[msg.sender][itemIndex] = true;
-
-        // Emit an event to track redeemed items
-        emit ItemRedeemed(msg.sender, item.name);
+        // Add the redeemed item to the sender's redeemed items list
+        redeemedItems[msg.sender].push(item);
     }
 
     function burn(uint256 amount) public {
@@ -124,19 +118,19 @@ contract DotaPoints is IERC20, Ownable {
         emit Transfer(msg.sender, address(0), amount);
     }
 
-    function getAvailableItems() public view returns (GameItem[] memory) {
+    function getAvailableItems() public view returns (Item[] memory) {
         uint256 availableCount = 0;
-        for (uint256 i = 0; i < dotaPoints.length; i++) {
-            if (dotaPoints[i].available) {
+        for (uint256 i = 0; i < items.length; i++) {
+            if (items[i].available) {
                 availableCount++;
             }
         }
 
-        GameItem[] memory availableItems = new GameItem[](availableCount);
+        Item[] memory availableItems = new Item[](availableCount);
         uint256 j = 0;
-        for (uint256 i = 0; i < dotaPoints.length; i++) {
-            if (dotaPoints[i].available) {
-                availableItems[j] = dotaPoints[i];
+        for (uint256 i = 0; i < items.length; i++) {
+            if (items[i].available) {
+                availableItems[j] = items[i];
                 j++;
             }
         }
@@ -144,11 +138,7 @@ contract DotaPoints is IERC20, Ownable {
         return availableItems;
     }
 
-    function getRedeemed(address user) public view returns (bool[] memory) {
-        bool[] memory redeemedItems = new bool[](dotaPoints.length);
-        for (uint256 i = 0; i < dotaPoints.length; i++) {
-            redeemedItems[i] = _redeemed[user][i];
-        }
-        return redeemedItems;
+    function getRedeemedItems(address account) public view returns (Item[] memory) {
+        return redeemedItems[account];
     }
 }
